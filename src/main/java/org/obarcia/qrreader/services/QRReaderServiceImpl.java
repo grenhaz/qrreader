@@ -68,18 +68,20 @@ public class QRReaderServiceImpl implements QRReaderService
      * Procesado de un PDF.
      * @param qrr Resultado previo y devuelto.
      * @param file Instancia del PDF.
+     * @param page Página a utilizar
      * @throws IOException 
      */
-    private void loadFromPdf(QRResult qrr, File file) throws IOException
+    private void loadFromPdf(QRResult qrr, File file, int page) throws IOException
     {
         PDDocument document = PDDocument.load(file);
         if (!document.isEncrypted()) {
             List<PDPage> pdPages = document.getDocumentCatalog().getAllPages();
-
-            BufferedImage image = pdPages.get(0).convertToImage(BufferedImage.TYPE_INT_RGB, 300);
+            
+            BufferedImage image = pdPages.get(page).convertToImage(BufferedImage.TYPE_INT_RGB, 300);
+            
+            document.close();
             
             qrr.setImage(image);
-            qrr.setPDPages(pdPages);
             qrr.setPages(pdPages.size());
             qrr.setResult(getResultFromImage(image));
         }
@@ -88,6 +90,7 @@ public class QRReaderServiceImpl implements QRReaderService
     public QRResult load(BufferedImage image)
     {
         QRResult qrr = new QRResult();
+        qrr.setType("iamge");
         qrr.setImage(image);
         qrr.setResult(getResultFromImage(image));
         qrr.setPages(1);
@@ -104,11 +107,13 @@ public class QRReaderServiceImpl implements QRReaderService
             //Comprobar si es un PDF
             if (file.toString().endsWith(".pdf")) {
                 // Como un PDF
-                loadFromPdf(qrr, file);
+                qrr.setType("pdf");
+                loadFromPdf(qrr, file, 0);
             } else {
                 // Como una imagen
                 BufferedImage image = ImageIO.read(file);
                 if (image != null) {
+                    qrr.setType("image");
                     qrr.setImage(image);
                     qrr.setResult(getResultFromImage(image));
                     qrr.setPages(1);
@@ -137,14 +142,10 @@ public class QRReaderServiceImpl implements QRReaderService
     {
         if (qrreader != null) {
             if (page > 0 && page <= qrreader.getPages()) {
-                if (qrreader.getPDPages() != null) {
+                if (qrreader.getType().equals("pdf")) {
                     try {
                         // PDF
-                        BufferedImage image = qrreader.getPDPages().get(page - 1).convertToImage(BufferedImage.TYPE_INT_RGB, 300);
-
-                        QRResult nr = load(image);
-                        qrreader.setImage(image);
-                        qrreader.setResult(nr.getResult());
+                        loadFromPdf(qrreader, qrreader.getSource(), page - 1);
                     } catch (IOException ex) {
                         Logger.getLogger(QRReaderServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
                     }

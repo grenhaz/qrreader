@@ -25,13 +25,13 @@ public class QRResult
      */
     private File source = null;
     /**
-     * Páginas del PDF.
-     */
-    private List<PDPage> pdPages = null;
-    /**
      * Número de páginas.
      */
     private int pages = 0;
+    /**
+     * Tipo de origen.
+     */
+    private String type = "";
 
     // ************************************************
     // GETTER & SETTER
@@ -68,12 +68,12 @@ public class QRResult
     {
         pages = value;
     }
-    public List<PDPage> getPDPages()
+    public String getType()
     {
-        return pdPages;
+        return type;
     }
-    public void setPDPages(List<PDPage> value)
+    public void setType(String value)
     {
-        pdPages = value;
+        type = value;
     }
 }
